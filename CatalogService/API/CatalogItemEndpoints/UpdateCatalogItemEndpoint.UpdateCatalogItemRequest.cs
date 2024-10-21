@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using CatalogService.API;
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints;
 

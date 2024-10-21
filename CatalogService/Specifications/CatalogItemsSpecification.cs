@@ -1,4 +1,5 @@
-﻿using Entities.CatalogItem;
+﻿using Ardalis.Specification;
+using CatalogService.Entities;
 
 namespace eShopOnWebMicroServices.Specifications;
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CatalogService.API;
+using System;
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints;
 

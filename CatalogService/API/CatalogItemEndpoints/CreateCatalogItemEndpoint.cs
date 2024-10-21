@@ -1,14 +1,13 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CatalogService.Entities;
+using CatalogService.Interfaces;
+using eShopOnWebMicroServices.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.eShopWeb.ApplicationCore.Entities;
-using Microsoft.eShopWeb.ApplicationCore.Exceptions;
-using Microsoft.eShopWeb.ApplicationCore.Interfaces;
-using Microsoft.eShopWeb.ApplicationCore.Specifications;
 using MinimalApi.Endpoint;
+
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints;
 
@@ -35,7 +34,6 @@ public class CreateCatalogItemEndpoint : IEndpoint<IResult, CreateCatalogItemReq
             .Produces<CreateCatalogItemResponse>()
             .WithTags("CatalogItemEndpoints");
     }
-
     public async Task<IResult> HandleAsync(CreateCatalogItemRequest request, IRepository<CatalogItem> itemRepository)
     {
         var response = new CreateCatalogItemResponse(request.CorrelationId());
@@ -44,7 +42,7 @@ public class CreateCatalogItemEndpoint : IEndpoint<IResult, CreateCatalogItemReq
         var existingCataloogItem = await itemRepository.CountAsync(catalogItemNameSpecification);
         if (existingCataloogItem > 0)
         {
-            throw new DuplicateException($"A catalogItem with name {request.Name} already exists");
+            // throw new DuplicateException($"A catalogItem with name {request.Name} already exists");
         }
 
         var newItem = new CatalogItem(request.CatalogTypeId, request.CatalogBrandId, request.Description, request.Name, request.Price, request.PictureUri);

@@ -1,4 +1,5 @@
-﻿using CatalogService.Interfaces;
+﻿using Ardalis.GuardClauses;
+using CatalogService.Interfaces;
 
 namespace CatalogService.Entities;
 

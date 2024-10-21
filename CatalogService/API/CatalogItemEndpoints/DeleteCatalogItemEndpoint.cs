@@ -1,11 +1,10 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CatalogService.Entities;
+using CatalogService.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.eShopWeb.ApplicationCore.Entities;
-using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using MinimalApi.Endpoint;
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints;
@@ -26,7 +25,6 @@ public class DeleteCatalogItemEndpoint : IEndpoint<IResult, DeleteCatalogItemReq
             .Produces<DeleteCatalogItemResponse>()
             .WithTags("CatalogItemEndpoints");
     }
-
     public async Task<IResult> HandleAsync(DeleteCatalogItemRequest request, IRepository<CatalogItem> itemRepository)
     {
         var response = new DeleteCatalogItemResponse(request.CorrelationId());

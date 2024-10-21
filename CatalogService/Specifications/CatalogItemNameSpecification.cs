@@ -1,4 +1,7 @@
-﻿namespace eShopOnWebMicroServices.Specifications;
+﻿using Ardalis.Specification;
+using CatalogService.Entities;
+
+namespace eShopOnWebMicroServices.Specifications;
 
 public class CatalogItemNameSpecification : Specification<CatalogItem>
 {
