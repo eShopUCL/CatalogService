@@ -17,8 +17,8 @@ public class DeleteCatalogItemEndpoint : IEndpoint<IResult, DeleteCatalogItemReq
     public void AddRoute(IEndpointRouteBuilder app)
     {
         app.MapDelete("api/catalog-items/{catalogItemId}",
-            [Authorize(Roles = BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async
-            (int catalogItemId, IRepository<CatalogItem> itemRepository) =>
+            //[Authorize(Roles = BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async
+            async (int catalogItemId, IRepository<CatalogItem> itemRepository) =>
             {
                 return await HandleAsync(new DeleteCatalogItemRequest(catalogItemId), itemRepository);
             })
