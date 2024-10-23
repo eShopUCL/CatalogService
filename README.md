@@ -23,3 +23,11 @@ These endpoints are a work in progress and currently commented out:
 - ~~**DELETE** `/api/catalog/items/{id:int}` - Delete an item by its ID.~~
 
 ---
+
+
+
+## Todo 🛠️
+- RabbitMQ/Event Bus stuff
+- Integrate with Order service / Order in Monolith
+- Fix the rest of the endpoints
+
