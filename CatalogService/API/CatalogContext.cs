@@ -9,15 +9,13 @@ namespace CatalogService.API
         {
         }
 
-        public DbSet<CatalogItem> Catalogs { get; set; }
+        public DbSet<CatalogItem> CatalogItems { get; set; }
         public DbSet<CatalogType> CatalogTypes { get; set; }
         public DbSet<CatalogBrand> CatalogBrands { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Define relationships and any configuration here
         }
     }
 }
