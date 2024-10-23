@@ -1,5 +1,4 @@
 using CatalogService.API;
-using eShop.Catalog.API;
 using Microsoft.EntityFrameworkCore; // Make sure to include the namespace where your MapCatalogApiV1 is defined
 
 var builder = WebApplication.CreateBuilder(args);

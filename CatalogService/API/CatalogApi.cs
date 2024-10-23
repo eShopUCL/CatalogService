@@ -4,7 +4,7 @@ using CatalogService.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
-namespace eShop.Catalog.API;
+namespace CatalogService.API;
 
 public static class CatalogApi
 {
