@@ -28,6 +28,7 @@ These endpoints are a work in progress and currently commented out:
 
 ## Todo 🛠️
 - RabbitMQ/Event Bus stuff
-- Integrate with Order service / Order in Monolith
+- Integration with Monolith
+- Deployment
 - Fix the rest of the endpoints
 
