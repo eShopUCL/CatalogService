@@ -25,7 +25,7 @@ public static class CatalogApi
 
         //api.MapPut("/items", UpdateItem);
         //api.MapPost("/items", CreateItem);
-        //api.MapDelete("/items/{id:int}", DeleteItemById);
+        api.MapDelete("/items/{id:int}", DeleteItemById);
 
         return app;
     }
