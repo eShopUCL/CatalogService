@@ -1,48 +1,42 @@
 using CatalogService.API;
 using CatalogService.Entities;
 using CatalogService.Model;
-using Moq;
-using Xunit;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Xunit;
 
 public class CatalogApiTests
 {
-    private readonly Mock<CatalogServices> _mockCatalogServices;
-    private readonly Mock<DbSet<CatalogItem>> _mockCatalogItemsDbSet;
+    private readonly CatalogContext _context;
+    private readonly CatalogServices _catalogServices;
 
     public CatalogApiTests()
     {
-        _mockCatalogServices = new Mock<CatalogServices>();
-        _mockCatalogItemsDbSet = new Mock<DbSet<CatalogItem>>();
-        var mockContext = new Mock<CatalogContext>();
+        // Setup in-memory database for testing
+        var options = new DbContextOptionsBuilder<CatalogContext>()
+            .UseInMemoryDatabase(databaseName: "TestCatalogDb")
+            .Options;
 
-        var catalogItems = new List<CatalogItem>
-        {
-            CreateCatalogItem(1, 1, "Description for Item1", "Item1", 10.0m, "https://example.com/image1.jpg", 1),
-            CreateCatalogItem(1, 2, "Description for Item2", "Item2", 20.0m, "https://example.com/image2.jpg", 2)
-        }.AsQueryable();
+        _context = new CatalogContext(options);
 
-        _mockCatalogItemsDbSet.As<IQueryable<CatalogItem>>().Setup(m => m.Provider).Returns(catalogItems.Provider);
-        _mockCatalogItemsDbSet.As<IQueryable<CatalogItem>>().Setup(m => m.Expression).Returns(catalogItems.Expression);
-        _mockCatalogItemsDbSet.As<IQueryable<CatalogItem>>().Setup(m => m.ElementType).Returns(catalogItems.ElementType);
-        _mockCatalogItemsDbSet.As<IQueryable<CatalogItem>>().Setup(m => m.GetEnumerator()).Returns(catalogItems.GetEnumerator());
+        // Seed data into the in-memory database
+        SeedDatabase();
 
-        mockContext.Setup(c => c.CatalogItems).Returns(_mockCatalogItemsDbSet.Object);
-        _mockCatalogServices.Setup(s => s.Context).Returns(mockContext.Object);
+        // Initialize CatalogServices with the in-memory context
+        _catalogServices = new CatalogServices(_context);
     }
 
-    private CatalogItem CreateCatalogItem(int catalogTypeId, int catalogBrandId, string description, string name, decimal price, string pictureUri, int id)
+    private void SeedDatabase()
     {
-        var item = new CatalogItem(catalogTypeId, catalogBrandId, description, name, price, pictureUri);
+        _context.CatalogItems.AddRange(
+            new CatalogItem(1, 1, "Description for Item1", "Item1", 10.0m, "https://example.com/image1.jpg"),
+            new CatalogItem(1, 2, "Description for Item2", "Item2", 20.0m, "https://example.com/image2.jpg")
+        );
 
-        var idProperty = typeof(BaseEntity).GetProperty("Id", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        idProperty?.SetValue(item, id);
-
-        return item;
+        _context.SaveChanges();
     }
 
     [Fact]
@@ -52,7 +46,7 @@ public class CatalogApiTests
         var paginationRequest = new PaginationRequest { PageSize = 10, PageIndex = 0 };
 
         // Act
-        var result = await CatalogApi.GetAllItems(paginationRequest, _mockCatalogServices.Object);
+        var result = await CatalogApi.GetAllItems(paginationRequest, _catalogServices);
 
         // Assert
         Assert.IsType<Ok<PaginatedItems<CatalogItem>>>(result.Result);
