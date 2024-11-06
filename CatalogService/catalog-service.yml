@@ -19,6 +19,9 @@ spec:
           image: eshopregistry.azurecr.io/catalogservice:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
 ---
 apiVersion: v1
 kind: Service

@@ -8,9 +8,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<CatalogContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CatalogConnection"),
-    sqlOptions => sqlOptions.EnableRetryOnFailure()));
-
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("CatalogConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure()
+    ));
 
 var app = builder.Build();
 
