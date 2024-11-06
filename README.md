@@ -29,6 +29,5 @@ These endpoints are a work in progress and currently commented out:
 ## Todo 🛠️
 - RabbitMQ/Event Bus stuff
 - Integration with Monolith
-- Deployment
 - Fix the rest of the endpoints
 
