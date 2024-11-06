@@ -15,8 +15,23 @@ builder.Services.AddDbContext<CatalogContext>(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsProduction())
+{
+    app.UsePathBase("/catalogservice");
+}
+
 app.UseSwagger();
-app.UseSwaggerUI();
+
+app.UseSwaggerUI(c =>
+{
+    var swaggerEndpoint = app.Environment.IsProduction() 
+        ? "/catalogservice/swagger/v1/swagger.json" 
+        : "/swagger/v1/swagger.json";
+    
+    c.SwaggerEndpoint(swaggerEndpoint, "Catalog Service API V1");
+    c.RoutePrefix = "swagger"; // This keeps Swagger UI accessible at /swagger or /catalogservice/swagger
+});
+
 app.MapCatalogApiV1();
 
 app.UseHttpsRedirection();
