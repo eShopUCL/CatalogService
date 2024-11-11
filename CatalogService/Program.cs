@@ -3,6 +3,17 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add CORS services to allow everything
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -20,8 +31,10 @@ if (app.Environment.IsProduction())
     app.UsePathBase("/catalogservice");
 }
 
-app.UseSwagger();
+// Enable CORS middleware with the "AllowAll" policy
+app.UseCors("AllowAll");
 
+app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     var swaggerEndpoint = app.Environment.IsProduction() 
@@ -29,12 +42,12 @@ app.UseSwaggerUI(c =>
         : "/swagger/v1/swagger.json";
     
     c.SwaggerEndpoint(swaggerEndpoint, "Catalog Service API V1");
-    c.RoutePrefix = "swagger"; // This keeps Swagger UI accessible at /swagger or /catalogservice/swagger
+    c.RoutePrefix = "swagger"; // Keeps Swagger UI accessible at /swagger or /catalogservice/swagger
 });
-
-app.MapCatalogApiV1();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapCatalogApiV1();
+
 app.Run();
