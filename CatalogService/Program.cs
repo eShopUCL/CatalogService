@@ -45,7 +45,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger"; // Keeps Swagger UI accessible at /swagger or /catalogservice/swagger
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.MapCatalogApiV1();
