@@ -1,7 +1,7 @@
-﻿using CatalogService.API;
-using CatalogService.Entities;
+﻿using CatalogService.Entities;
 using CatalogService.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CatalogService.API;
@@ -13,24 +13,26 @@ public static class CatalogApi
         var api = app.MapGroup("api/catalog");
 
         api.MapGet("/items", GetAllItems);
+        api.MapGet("/items/paged", GetAllItemsPaged);
         api.MapGet("/items/by", GetItemsByIds);
         api.MapGet("/items/{id:int}", GetItemById);
         api.MapGet("/items/by/{name:minlength(1)}", GetItemsByName);
-        //api.MapGet("/items/{catalogItemId:int}/pic", GetItemPictureById);
 
         api.MapGet("/items/type/{typeId}/brand/{brandId?}", GetItemsByBrandAndTypeId);
         api.MapGet("/items/type/all/brand/{brandId:int?}", GetItemsByBrandId);
         api.MapGet("/catalogtypes", async (CatalogContext context) => await context.CatalogTypes.OrderBy(x => x.Type).ToListAsync());
         api.MapGet("/catalogbrands", async (CatalogContext context) => await context.CatalogBrands.OrderBy(x => x.Brand).ToListAsync());
 
-        //api.MapPut("/items", UpdateItem);
-        //api.MapPost("/items", CreateItem);
+        api.MapPut("/items/{id:int}", UpdateItem);
+        api.MapPost("/items", CreateItem);
         api.MapDelete("/items/{id:int}", DeleteItemById);
 
         return app;
     }
 
-    public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItems(
+    // Hent alle items i paged format - Tager en paginationRequest med mængden af
+    // resultater per side samt sidenummer
+    public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItemsPaged(
         [AsParameters] PaginationRequest paginationRequest,
         [AsParameters] CatalogServices services)
     {
@@ -49,32 +51,67 @@ public static class CatalogApi
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
 
+    // Hent ALLE Catalog Items
+    public static async Task<Results<Ok<List<CatalogItem>>, BadRequest<string>>> GetAllItems(
+    [AsParameters] CatalogServices services)
+    {
+        var items = await services.Context.CatalogItems
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+        return TypedResults.Ok(items);
+    }
+    
+    // Hent items ud fra flere ID'er, f.eks. ids [1, 2, 3]
     public static async Task<Ok<List<CatalogItem>>> GetItemsByIds(
         [AsParameters] CatalogServices services,
         int[] ids)
     {
+        // For hvert item fundet, tilføj til en liste og returner denne
         var items = await services.Context.CatalogItems.Where(item => ids.Contains(item.Id)).ToListAsync();
         return TypedResults.Ok(items);
     }
 
-    public static async Task<Results<Ok<CatalogItem>, NotFound, BadRequest<string>>> GetItemById(
-        [AsParameters] CatalogServices services,
-        int id)
+    public static async Task<Results<Ok<CatalogItemResponse>, NotFound, BadRequest<string>>> GetItemById(
+    [AsParameters] CatalogServices services,
+    int id)
     {
+        // Hvis ID er mindre end eller 0, returner en 400 Bad Request
         if (id <= 0)
         {
             return TypedResults.BadRequest("Id is not valid.");
         }
 
-        var item = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).SingleOrDefaultAsync(ci => ci.Id == id);
+        // Hent Catalog Item samt dens CatalogBrand og CatalogType
+        var item = await services.Context.CatalogItems
+            .Include(ci => ci.CatalogBrand)
+            .Include(ci => ci.CatalogType)
+            .SingleOrDefaultAsync(ci => ci.Id == id);
 
+        // Hvis intet item er fundet, returner 404
         if (item == null)
         {
             return TypedResults.NotFound();
         }
 
-        return TypedResults.Ok(item);
+        // Map Catalog Item til CatalogItemResponse DTO, da vi ikke vil have vores CatalogType og
+        // CatalogBrand til at være hele objekter, men i stedet bare en string for navnet for brand / type
+        var response = new CatalogItemResponse
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Description = item.Description,
+            Price = item.Price,
+            PictureUri = item.PictureUri,
+            CatalogTypeId = item.CatalogTypeId,
+            CatalogType = item.CatalogType?.Type ?? "Unknown",
+            CatalogBrandId = item.CatalogBrandId,
+            CatalogBrand = item.CatalogBrand?.Brand ?? "Unknown"
+        };
+
+        return TypedResults.Ok(response);
     }
+
 
     public static async Task<Ok<PaginatedItems<CatalogItem>>> GetItemsByName(
         [AsParameters] PaginationRequest paginationRequest,
@@ -96,26 +133,6 @@ public static class CatalogApi
 
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
-
-    /*public static async Task<Results<NotFound, PhysicalFileHttpResult>> GetItemPictureById(CatalogContext context, IWebHostEnvironment environment, int catalogItemId)
-    {
-        var item = await context.CatalogItems.FindAsync(catalogItemId);
-
-        if (item is null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        var path = GetFullPath(environment.ContentRootPath, item.PictureFileName);
-
-        string imageFileExtension = Path.GetExtension(item.PictureFileName);
-        string mimetype = GetImageMimeTypeFromImageFileExtension(imageFileExtension);
-        DateTime lastModified = File.GetLastWriteTimeUtc(path);
-
-        return TypedResults.PhysicalFile(path, mimetype, lastModified: lastModified);
-    }*/
-
-
 
     public static async Task<Ok<PaginatedItems<CatalogItem>>> GetItemsByBrandAndTypeId(
         [AsParameters] PaginationRequest paginationRequest,
@@ -170,67 +187,81 @@ public static class CatalogApi
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
 
-    /* public static async Task<Results<Created, NotFound<string>>> UpdateItem(
-         [AsParameters] CatalogServices services,
-         CatalogItem productToUpdate)
-     {
-         var catalogItem = await services.Context.CatalogItems.SingleOrDefaultAsync(i => i.Id == productToUpdate.Id);
-
-         if (catalogItem == null)
-         {
-             return TypedResults.NotFound($"Item with id {productToUpdate.Id} not found.");
-         }
-
-         // Update current product
-         var catalogEntry = services.Context.Entry(catalogItem);
-         catalogEntry.CurrentValues.SetValues(productToUpdate);
-
-         catalogItem.Embedding = await services.CatalogAI.GetEmbeddingAsync(catalogItem);
-
-         var priceEntry = catalogEntry.Property(i => i.Price);
-
-         if (priceEntry.IsModified) // Save product's data and publish integration event through the Event Bus if price has changed
-         {
-             //Create Integration Event to be published through the Event Bus
-             var priceChangedEvent = new ProductPriceChangedIntegrationEvent(catalogItem.Id, productToUpdate.Price, priceEntry.OriginalValue);
-
-             // Achieving atomicity between original Catalog database operation and the IntegrationEventLog thanks to a local transaction
-             await services.EventService.SaveEventAndCatalogContextChangesAsync(priceChangedEvent);
-
-             // Publish through the Event Bus and mark the saved event as published
-             await services.EventService.PublishThroughEventBusAsync(priceChangedEvent);
-         }
-         else // Just save the updated product because the Product's Price hasn't changed.
-         {
-             await services.Context.SaveChangesAsync();
-         }
-         return TypedResults.Created($"/api/catalog/items/{productToUpdate.Id}");
-     }*/
-
-    /*public static async Task<Created> CreateItem(
-        [AsParameters] CatalogServices services,
-        CatalogItem product)
+    public static async Task<Results<NotFound, PhysicalFileHttpResult>> GetItemPictureById(
+    [AsParameters] CatalogServices services,
+    IWebHostEnvironment environment,
+    int catalogItemId)
     {
-        var item = new CatalogItem
-        {
-            Id = product.Id,
-            CatalogBrandId = product.CatalogBrandId,
-            CatalogTypeId = product.CatalogTypeId,
-            Description = product.Description,
-            Name = product.Name,
-            PictureFileName = product.PictureFileName,
-            Price = product.Price,
-            AvailableStock = product.AvailableStock,
-            RestockThreshold = product.RestockThreshold,
-            MaxStockThreshold = product.MaxStockThreshold
-        };
-        item.Embedding = await services.CatalogAI.GetEmbeddingAsync(item);
+        var item = await services.Context.CatalogItems.FindAsync(catalogItemId);
 
-        services.Context.CatalogItems.Add(item);
+        if (item is null || string.IsNullOrEmpty(item.PictureUri))
+        {
+            return TypedResults.NotFound();
+        }
+
+        var path = GetFullPath(environment.ContentRootPath, item.PictureUri);
+
+        if (!File.Exists(path))
+        {
+            return TypedResults.NotFound();
+        }
+
+        string imageFileExtension = Path.GetExtension(item.PictureUri);
+        string mimetype = GetImageMimeTypeFromImageFileExtension(imageFileExtension);
+        DateTime lastModified = File.GetLastWriteTimeUtc(path);
+
+        return TypedResults.PhysicalFile(path, mimetype, lastModified: lastModified);
+    }
+
+
+    public static async Task<Results<Created<CatalogItem>, BadRequest<string>>> CreateItem(
+        [AsParameters] CatalogServices services,
+        [FromBody] CatalogItem catalogItem)
+    {
+        // Brug services.context til at tilføje catalog Item til DB
+        services.Context.CatalogItems.Add(catalogItem);
         await services.Context.SaveChangesAsync();
 
-        return TypedResults.Created($"/api/catalog/items/{item.Id}");
-    }*/
+        // Returnér det oprettede item
+        return TypedResults.Created($"/api/catalog/items/{catalogItem.Id}", catalogItem);
+    }
+
+
+    public static async Task<Results<NoContent, NotFound, BadRequest<string>>> UpdateItem(
+    [AsParameters] CatalogServices services,
+    int id,
+    [FromBody] CatalogItem updatedItem)
+    {
+        // Log the request
+        Console.WriteLine($"Received request to update item with ID: {id}");
+
+        var catalogItem = await services.Context.CatalogItems
+            .SingleOrDefaultAsync(item => item.Id == id);
+
+        if (catalogItem is null)
+        {
+            Console.WriteLine($"Item with ID: {id} not found.");
+            return TypedResults.NotFound();
+        }
+
+        // Proceed with updating the item
+        catalogItem.UpdateDetails(new CatalogItem.CatalogItemDetails(
+            updatedItem.Name,
+            updatedItem.Description,
+            updatedItem.Price
+        ));
+
+        catalogItem.UpdateBrand(updatedItem.CatalogBrandId);
+        catalogItem.UpdateType(updatedItem.CatalogTypeId);
+        catalogItem.UpdatePictureUri(updatedItem.PictureUri);
+
+        await services.Context.SaveChangesAsync();
+        Console.WriteLine($"Item with ID: {id} successfully updated.");
+
+        return TypedResults.NoContent();
+    }
+
+
 
     public static async Task<Results<NoContent, NotFound>> DeleteItemById(
         [AsParameters] CatalogServices services,
