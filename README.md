@@ -12,22 +12,11 @@ These endpoints are active and ready for use:
 - **GET** `/api/catalog/items/type/{typeId}/brand/{brandId?}` - Get items by type and brand ID.
 - **DELETE** `/api/catalog/items/{id:int}` - Delete an item by its ID.
 - **GET** `/api/catalog/items/type/all/brand/{brandId:int?}` - Get all items by brand ID.
+- **POST** `/api/catalog/items` - Create a new item
+- **PUT** `/api/catalog/items` - Update an existing item
 ---
-
-## WIP Endpoints 🛠️
-These endpoints are a work in progress and currently commented out:
-
-- ~~**GET** `/api/catalog/items/{catalogItemId:int}/pic` - Get item picture by ID.~~
-- ~~**PUT** `/api/catalog/items` - Update an existing item.~~
-- ~~**POST** `/api/catalog/items` - Create a new item.~~
-
-
----
-
-
 
 ## Todo 🛠️
 - RabbitMQ/Event Bus stuff
-- Integration with Monolith
-- Fix the rest of the endpoints
+- DB
 
