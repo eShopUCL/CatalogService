@@ -13,7 +13,7 @@ public static class CatalogApi
         var api = app.MapGroup("api/catalog");
 
         api.MapGet("/items", GetAllItems);
-        api.MapGet("/items/paged", GetAllItemsPaged);
+        api.MapGet("/items/paged", GetAllItemsPaginated);
         api.MapGet("/items/by", GetItemsByIds);
         api.MapGet("/items/{id:int}", GetItemById);
         api.MapGet("/items/by/{name:minlength(1)}", GetItemsByName);
@@ -32,7 +32,7 @@ public static class CatalogApi
 
     // Hent alle items i paged format - Tager en paginationRequest med mængden af
     // resultater per side samt sidenummer
-    public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItemsPaged(
+    public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItemsPaginated(
         [AsParameters] PaginationRequest paginationRequest,
         [AsParameters] CatalogServices services)
     {
@@ -61,7 +61,7 @@ public static class CatalogApi
 
         return TypedResults.Ok(items);
     }
-    
+
     // Hent items ud fra flere ID'er, f.eks. ids [1, 2, 3]
     public static async Task<Ok<List<CatalogItem>>> GetItemsByIds(
         [AsParameters] CatalogServices services,

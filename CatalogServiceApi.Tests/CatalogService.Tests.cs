@@ -46,7 +46,7 @@ public class CatalogApiTests
         var paginationRequest = new PaginationRequest { PageSize = 10, PageIndex = 0 };
 
         // Act
-        var result = await CatalogApi.GetAllItems(paginationRequest, _catalogServices);
+        var result = await CatalogApi.GetAllItemsPaginated(paginationRequest, _catalogServices);
 
         // Assert
         Assert.IsType<Ok<PaginatedItems<CatalogItem>>>(result.Result);
