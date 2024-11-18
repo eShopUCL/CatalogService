@@ -5,6 +5,7 @@ namespace CatalogService.Entities;
 
 public class CatalogItem : BaseEntity, IAggregateRoot
 {
+    public int Id {get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
     public decimal Price { get; private set; }
@@ -59,7 +60,7 @@ public class CatalogItem : BaseEntity, IAggregateRoot
             PictureUri = string.Empty;
             return;
         }
-        PictureUri = $"images\\products\\{pictureName}?{new DateTime().Ticks}";
+        PictureUri = $"{pictureName}?{new DateTime().Ticks}";
     }
 
     public readonly record struct CatalogItemDetails
