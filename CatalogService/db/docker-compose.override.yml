@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  catalog-db:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "@someThingComplicated1234"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./init:/var/opt/mssql/init
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"

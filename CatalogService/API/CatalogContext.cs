@@ -16,6 +16,10 @@ namespace CatalogService.API
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<CatalogItem>()
+            .Property(c => c.Price)
+            .HasColumnType("decimal(18, 2)");
         }
     }
 }
