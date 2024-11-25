@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-sqlserver
+  labels:
+    app: catalog-sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-sqlserver
+  template:
+    metadata:
+      labels:
+        app: catalog-sqlserver
+    spec:
+      containers:
+      - name: catalog-sqlserver
+        image: mcr.microsoft.com/azure-sql-edge:latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: SA_PASSWORD
+          value: "@someThingComplicated1234"
+        - name: ACCEPT_EULA
+          value: "Y"
+        volumeMounts:
+        - name: catalog-sqlstorage
+          mountPath: /var/opt/mssql
+        securityContext:
+          runAsUser: 0  # Run as root user to bypass security restrictions
+      volumes:
+      - name: catalog-sqlstorage
+        persistentVolumeClaim:
+          claimName: catalog-sqlserver-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: catalog-sqlserver-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-sqlserver-service
+  labels:
+    app: catalog-sqlserver
+spec:
+  type: ClusterIP
+  ports:
+    - port: 1433
+      targetPort: 1433
+  selector:
+    app: catalog-sqlserver
