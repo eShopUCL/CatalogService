@@ -1,4 +1,5 @@
 using CatalogService.API;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,31 @@ builder.Services.AddDbContext<CatalogContext>(options =>
         builder.Configuration.GetConnectionString("CatalogConnection"),
         sqlOptions => sqlOptions.EnableRetryOnFailure()
     ));
+
+// Opret RabbitMQ-forbindelse som singleton
+builder.Services.AddSingleton(sp =>
+{
+    var factory = new ConnectionFactory
+    {
+        Uri = new Uri("amqp://guest:guest@localhost:5672/")
+    };
+    return factory.CreateConnection();
+});
+
+// Registrer RabbitMQ kanal som transient
+builder.Services.AddTransient(sp =>
+{
+    var connection = sp.GetRequiredService<IConnection>();
+    return connection.CreateModel();
+});
+
+// Registrer CatalogRequestConsumer som hosted service
+builder.Services.AddSingleton<CatalogRequestConsumer>();
+builder.Services.AddHostedService(sp =>
+{
+    var consumer = sp.GetRequiredService<CatalogRequestConsumer>();
+    return new CatalogRequestConsumerHostedService(consumer);
+});
 
 var app = builder.Build();
 
