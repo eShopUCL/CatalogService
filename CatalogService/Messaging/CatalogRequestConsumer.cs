@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
-using CatalogService.Messaging.Messages;
-using Microsoft.EntityFrameworkCore;
+﻿using CatalogService.Messaging.Messages;
 using CatalogService.API;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace CatalogService.Messaging
 {
@@ -9,6 +13,7 @@ namespace CatalogService.Messaging
     public class CatalogRequestConsumer
     {
         private readonly IModel _channel;
+        
         private readonly CatalogContext _context;
 
         public CatalogRequestConsumer(IModel channel, CatalogContext context)
@@ -86,7 +91,7 @@ namespace CatalogService.Messaging
             var response = catalogItems.Select(item => new CatalogItemResponse
             {
                 Id = item.Id,
-                Name = item.Name, // Dette svarer til ProductName i Order
+                Name = item.Name,
                 PictureUri = item.PictureUri
             }).ToList();
 
